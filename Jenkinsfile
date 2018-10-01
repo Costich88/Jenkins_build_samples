@@ -27,10 +27,10 @@ node {
                 platform :android do
                   lane :build_android do
                     gradle(task: "build")
-                    sh("sudo $ANDROID_HOME/build-tools/26.0.2/zipalign -v 4 $WORKSPACE/2048/2048/build/outputs/apk/2048-release-unsigned.apk $WORKSPACE/2048/2048/build/outputs/apk/2048.apk ")
-                    sh("sudo $ANDROID_HOME/build-tools/26.0.2/apksigner sign --ks /Users/kanstantsin/test --ks-pass pass:test228 --ks-key-alias newtest $WORKSPACE/2048/2048/build/outputs/apk/2048.apk")
-                    sh("sudo $ANDROID_HOME/build-tools/26.0.2/apksigner verify -v $WORKSPACE/2048/2048/build/outputs/apk/2048.apk")
-                    ENV["APK"]= sh("sudo find $WORKSPACE -name 2048.apk")
+                    sh("$ANDROID_HOME/build-tools/26.0.2/zipalign -v 4 $WORKSPACE/2048/2048/build/outputs/apk/2048-release-unsigned.apk $WORKSPACE/2048/2048/build/outputs/apk/2048.apk ")
+                    sh("$ANDROID_HOME/build-tools/26.0.2/apksigner sign --ks /Users/kanstantsin/test --ks-pass pass:test228 --ks-key-alias newtest $WORKSPACE/2048/2048/build/outputs/apk/2048.apk")
+                    sh("$ANDROID_HOME/build-tools/26.0.2/apksigner verify -v $WORKSPACE/2048/2048/build/outputs/apk/2048.apk")
+                    ENV["APK"]= sh("find $WORKSPACE -name 2048.apk")
                     puts("App is located #{ENV["APK"]}")
                   end
                 end"""
