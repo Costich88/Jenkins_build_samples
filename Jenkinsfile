@@ -24,8 +24,11 @@ node {
             sh """mkdir fastlane
                 touch fastlane/.env.xamarin
                 cat <<EOT >> fastlane/.env.xamarin
-                BUILD_TASK="msbuild /t:SignAndroidPackage /p:Configuration=Release"
+                BUILD_TASK="/t:SignAndroidPackage /p:Configuration=Release"
                 PATH_TO_APK="sh("find $WORKSPACE -name *Signed.apk")"
+                NUGET="/Library/Frameworks/Mono.framework/Versions/Current/Commands/nuget"
+                MSBUILD="/Library/Frameworks/Mono.framework/Versions/Current/Commands/msbuild"
+                APKSIGNER="$ANDROID_HOME/build-tools/26.0.2/apksigner"
                 end"""
 
             step_name = "Creating Fastfile"
@@ -33,11 +36,11 @@ node {
                 cat <<EOT >> fastlane/Fastfile
                 platform :android do
                   lane :build_android do
-                    sh("/Library/Frameworks/Mono.framework/Versions/Current/Commands/nuget restore $WORKSPACE/RpnCalculator.sln")
-                    sh("/Library/Frameworks/Mono.framework/Versions/Current/Commands/#{ENV["BUILD_TASK"]} $WORKSPACE/RpnCalculator/RpnCalculator.Android/RpnCalculator.Android.csproj")
+                    sh("#{ENV["NUGET"]} restore $WORKSPACE/RpnCalculator.sln")
+                    sh("#{ENV["MSBUILD"]} #{ENV["BUILD_TASK"]} $WORKSPACE/RpnCalculator/RpnCalculator.Android/RpnCalculator.Android.csproj")
                     ENV["PATH_TO_APK"]= sh("find $WORKSPACE -name *Signed.apk")
                     puts("App is located #{ENV["PATH_TO_APK"]}")
-                    sh("$ANDROID_HOME/build-tools/26.0.2/apksigner verify -v #{ENV["PATH_TO_APK"]}")
+                    sh("#{ENV["APKSIGNER"]} verify -v #{ENV["PATH_TO_APK"]}")
                   end
                 end"""
 
