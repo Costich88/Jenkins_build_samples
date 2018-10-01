@@ -6,7 +6,7 @@ node {
 
     try {
         stage('Preparation (Checking out)') {
-            git 'https://github.com/BuddyBuild/2048-Android'
+            git 'https://github.com/Costich88/xamarin-forms-samples'
         }
     }
 
@@ -20,29 +20,38 @@ node {
             sh """export LC_ALL=en_US.UTF-8
                   export LANG=en_US.UTF-8"""
 
+            step_name="Creating ENV file"
+            sh """mkdir fastlane
+                touch fastlane/.env.xamarin
+                cat <<EOT >> fastlane/.env.xamarin
+                BUILD_TASK="msbuild /t:SignAndroidPackage /p:Configuration=Release"
+                PATH_TO_APK="sh("find $WORKSPACE -name *Signed.apk")"
+                end"""
+
             step_name = "Creating Fastfile"
-            sh """mkdir -p 2048/fastlane
-                touch 2048/fastlane/Fastfile
-                cat <<EOT >> 2048/fastlane/Fastfile
+            sh """touch fastlane/Fastfile
+                cat <<EOT >> fastlane/Fastfile
                 platform :android do
                   lane :build_android do
-                    gradle(task: "build")
-                    sh("sudo /Users/kanstantsin/Library/Android/sdk/build-tools/28.0.2/zipalign -v 4 ../2048/build/outputs/apk/2048-release-unsigned.apk ../2048/build/outputs/apk/2048.apk ")
-                    sh("sudo /Users/kanstantsin/Library/Android/sdk/build-tools/28.0.2/apksigner sign --ks /Users/kanstantsin/test --ks-pass pass:test228 --ks-key-alias newtest ../2048/build/outputs/apk/2048.apk")
-                    sh("sudo /Users/kanstantsin/Library/Android/sdk/build-tools/28.0.2/apksigner verify -v ../2048/build/outputs/apk/2048.apk")
-                    ENV["APK"]= sh("sudo find /Users/Shared/Jenkins/Home/workspace/ -name 2048.apk")
-                    puts("App is located #{ENV["APK"]}")
+                    sh("/Library/Frameworks/Mono.framework/Versions/Current/Commands/nuget restore $WORKSPACE/RpnCalculator.sln")
+                    sh("/Library/Frameworks/Mono.framework/Versions/Current/Commands/#{ENV["BUILD_TASK"]} $WORKSPACE/RpnCalculator/RpnCalculator.Android/RpnCalculator.Android.csproj")
+                    ENV["PATH_TO_APK"]= sh("find $WORKSPACE -name *Signed.apk")
+                    puts("App is located #{ENV["PATH_TO_APK"]}")
+                    sh("$ANDROID_HOME/build-tools/26.0.2/apksigner verify -v #{ENV["PATH_TO_APK"]}")
                   end
                 end"""
 
             step_name = "Runnin fastlane"
-            sh """cd 2048
-                  chmod +x gradlew
-                  /usr/local/bin/fastlane android build_android"""        }
+            sh "/usr/local/bin/fastlane android build_android --env xamarin" 
+       }
     }
 
     catch (Exception ex) {
         println("Building code failed")
+    }
+
+    stage('Archiving artefacts'){
+        archiveArtifacts '**/*.apk'
     }
 
 }
